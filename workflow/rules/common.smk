@@ -31,9 +31,20 @@ def get_gwas(wildcards):
     file_path = f"{seqid}/{seqid}.gwaslab.tsv.gz"
     return str(Path(config.get("path_gwas"), file_path))
 
-# return genotype
-def get_geno(wildcards):
-    chrom = data.loc[wildcards, "chr"]
-    path = config.get("genotype")
-    filename = f"{path}{chrom}.pgen"
-    return str(Path(filename))
+# return filename of tileDB output
+def get_pwasname(wildcards):
+
+    odir = config["workspace_path"]
+    proj = config["gwasstudio"]["project_A"]
+    study = config["gwasstudio"]["study_A"]
+    locuseq = wildcards.locuseq     # e.g. seq.16300.4_22_43928847_43998522
+
+    # extract seqid and region parts
+    seqid = locuseq.split("_")[0]               # seq.16300.4
+    region = "_".join(locuseq.split("_")[1:])   # 22_43928847_43998522
+
+    filename = f"{locuseq}_{proj}_{study}_{seqid}.csv.gz"
+
+    return str(Path(odir, "tmp/pwas", filename))
+
+#results/test/tmp/pwas/seq.16300.4_22_43928847_43998522_hdsc_believe_seq.16300.4.csv.gz
