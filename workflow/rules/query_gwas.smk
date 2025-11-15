@@ -1,12 +1,15 @@
 
-rule create_query:
+rule gwas_yaml:
     output:
-        qregion = ws_path("tmp/{locuseq}_region.tsv"),
-        qyaml = ws_path("tmp/{locuseq}_query.yaml"),
+        qregion = ws_path("tmp/gwas/{locuseq}_region.tsv"),
+        qyaml = ws_path("tmp/gwas/{locuseq}_query.yaml"),
     params:
         locus = lambda wildcards: get_locus(wildcards.locuseq),
         locuseq = "{locuseq}",
-        tail = config.get("susieR").get("extension"),
+        tail  = config.get("coloc").get("extension"),
+        projB = config.get("gwasstudio").get("project_B"),
+        studB = config.get("gwasstudio").get("study_B"),
+        cateB = config.get("gwasstudio").get("category_B"),
     #conda:
     #    "envs/environment.yml"
     resources:
@@ -32,22 +35,18 @@ rule create_query:
         # create region file
         echo "$chr\t$beg\t$end" > {output.qregion}
 
-        # create yaml file
-        
-        # Extract "8280.238" then replace dot with dash
-        seqid=$(echo {params.locuseq} | awk -F'[._]' '{{print $2"-"$3}}')
-        
         # Write YAML file
 cat <<EOF > {output.qyaml}
-project: pqtl
-study: believe
-
-trait:
-  - seqid: $seqid
+project: {params.projB}
+study: {params.studB}
+category: {params.cateB}
 
 output:
   - build
+  - notes.sex
+  - notes.source_id
   - trait.desc
+  - total.samples
 EOF
 
         echo "YAML file created: {output.qyaml}"
@@ -56,26 +55,23 @@ EOF
 
 rule query_gwas:
     input:
-        qregion = ws_path("tmp/{locuseq}_region.tsv"),
-        qyaml = ws_path("tmp/{locuseq}_query.yaml"),
+        qregion = rules.gwas_yaml.output.qregion,
+        qyaml = rules.gwas_yaml.output.qyaml,
     output:
-        sumstat = ws_path("tmp/{locuseq}/{locuseq}_sumstat.csv.gz")
+        sentinel = ws_path("tmp/gwas/{locuseq}/{locuseq}.sentinel")
     #conda:
     #    "envs/environment.yml"
     params:
-        prefix=lambda wildcards, output: output.sumstat.replace("_sumstat.csv.gz", ""),
-        locuseq = "{locuseq}",
+        prefix=lambda wildcards, output: output.sentinel.replace(".sentinel", ""),
     resources:
         runtime=lambda wc, attempt: 120 + attempt * 60,
     shell:
         """
         source /exchange/healthds/singularity_functions
 
-        gwasstudio export  --search-file {input.qyaml}  --get-regions {input.qregion}  --output-prefix {params.prefix}
+        gwasstudio export  --search-file {input.qyaml}  --get-regions-snps {input.qregion}  --output-prefix {params.prefix}
 
-        seqid=$(echo {params.locuseq} | cut -d'_' -f1)
-        odir=$(dirname {output.sumstat})
-
-        mv {params.prefix}_$seqid.csv.gz {output.sumstat}
-        # mv slurm*.out $odir
+        odir=$(dirname {output.sentinel})
+        #mv slurm*.out $odir
+        touch {output.sentinel}
         """
