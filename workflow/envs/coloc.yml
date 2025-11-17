@@ -1,0 +1,14 @@
+name: coloc
+channels:
+  - conda-forge
+  - r
+  - defaults
+dependencies:
+  - r-base=4.3.3
+  - r-R.utils=2.13.0
+  - r-tidyverse
+  - r-glue
+  - r-ggpubr
+  - r-data.table
+  - r-Rmpfr=0.9_3
+  - r-coloc=5.2.3
