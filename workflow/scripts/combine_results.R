@@ -18,7 +18,7 @@ file_path <- as.character(file_path)
 # scan the results for all proteins sequence
 res_files <- list.files(
   pattern = paste0("seq.(\\d+).(\\d+)_(\\d+)_(\\d+)_(\\d+)_coloc_results.csv"),
-  path = pcmd,      # the path where the independents snps file live
+  path = pcmd,       # the path where results files live
   recursive = FALSE, # to show the files in subdirectories or subfolders
   full.names = TRUE # to show full path
 )
@@ -43,8 +43,7 @@ res_files_input <- res_files[seq_list_tbl$seqid %in% input_seqid$seqid]
 
 #--------------#
 # Merge filenames characteristics
-combined_results <- tibble(
-  data.table::rbindlist(
+combined_results <- data.table::rbindlist(
     fill = TRUE,
     lapply(
       res_files_input, 
@@ -58,10 +57,9 @@ combined_results <- tibble(
     }
     )
   )
-)
 
 #combined_results <- combined_results %>% arrange(Chr, bp)
 
 #--------------#
 # save the joint results
-write.table(combined_results, file = file_path, sep = "\t", quote = F, row.names = F)
+write.table(combined_results, file = file_path, sep = "\t", quote = T, row.names = F)

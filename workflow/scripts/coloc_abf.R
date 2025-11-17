@@ -124,4 +124,4 @@ traits2test <- expand.grid(pwas_file, sums_lists, stringsAsFactors = FALSE)
 res <- map2_df(traits2test$Var1, traits2test$Var2, run_coloc)
 
 # save results
-write.csv(res, file = resu_file, quote = F, row.names = F)
+write.csv(res, file = resu_file, quote = T, row.names = F)
