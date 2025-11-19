@@ -1,8 +1,8 @@
 
 rule gwas_yaml:
     output:
-        qregion = ws_path("tmp/gwas/{locuseq}_region.tsv"),
-        qyaml = ws_path("tmp/gwas/{locuseq}_query.yaml"),
+        qregion = temp(ws_path("tmp/gwas/{locuseq}_region.tsv")),
+        qyaml = temp(ws_path("tmp/gwas/{locuseq}_query.yaml")),
     params:
         locus = lambda wildcards: get_locus(wildcards.locuseq),
         locuseq = "{locuseq}",
@@ -58,7 +58,7 @@ rule query_gwas:
         qregion = rules.gwas_yaml.output.qregion,
         qyaml = rules.gwas_yaml.output.qyaml,
     output:
-        sentinel = ws_path("tmp/gwas/{locuseq}/{locuseq}.sentinel")
+        sentinel = temp(ws_path("tmp/gwas/{locuseq}/{locuseq}.sentinel"))
     #conda:
     #    "envs/environment.yml"
     params:

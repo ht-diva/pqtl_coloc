@@ -1,8 +1,8 @@
 
 rule pwas_yaml:
     output:
-        qregion = ws_path("tmp/pwas/{locuseq}_region.tsv"),
-        qyaml = ws_path("tmp/pwas/{locuseq}_query.yaml"),
+        qregion = temp(ws_path("tmp/pwas/{locuseq}_region.tsv")),
+        qyaml = temp(ws_path("tmp/pwas/{locuseq}_query.yaml")),
     params:
         locus = lambda wildcards: get_locus(wildcards.locuseq),
         locuseq = "{locuseq}",
@@ -66,7 +66,7 @@ rule query_pwas:
         qregion = rules.pwas_yaml.output.qregion,
         qyaml = rules.pwas_yaml.output.qyaml,
     output:
-        sumstat = ws_path("tmp/pwas/{locuseq}_sumstat.csv.gz")
+        sumstat = temp(ws_path("tmp/pwas/{locuseq}_sumstat.csv.gz"))
     #conda:
     #    "envs/environment.yml"
     params:

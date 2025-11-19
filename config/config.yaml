@@ -1,0 +1,25 @@
+# paths
+workspace_path: "results/test"
+path_lb: "config/believe_locus.csv"
+path_gwas: "/exchange/healthds/pQTL/BELIEVE/harmonized_gwas"
+
+
+gwasstudio:
+  category_A: pQTL
+  category_B: GWAS
+  project_A: hdsc
+  project_B: genesandhealth
+  study_A: believe
+  study_B: v010_quantitative_traits_median_values
+
+
+# coloc.abf parameters
+coloc:
+  MAF: NULL
+  p1: 1e-04
+  p2: 1e-04
+  p12: 1e-05
+  prior_weights1: NULL
+  prior_weights2: NULL
+  extension: 0
+
