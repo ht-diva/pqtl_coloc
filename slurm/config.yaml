@@ -3,8 +3,8 @@ jobs: 250
 software-deployment-method:
    - conda
    - apptainer
-retries: 0
-max-jobs-per-second: 10
+retries: 3
+max-jobs-per-second: 100
 max-status-checks-per-second: 1
 local-cores: 1
 cores: &cores 4
@@ -17,7 +17,6 @@ scheduler: ilp
 
 default-resources:
     slurm_partition: cpuq
-    # slurm_account: ${USER}
     mem_mb: attempt * 256
     threads: 1
     runtime: attempt * 5
@@ -26,10 +25,10 @@ set-threads:
     bgzip_tabix: *cores
 set-resources:
     query_pwas:
-        mem_mb: 3072 + attempt * 1024
+        mem_mb: 1024 + attempt * 1024
     query_gwas:
-        mem_mb: 3072 + attempt * 1024
+        mem_mb: 2048 + attempt * 1024
     run_coloc:
-        mem_mb: 3072 + attempt * 1024 #int(4096 * (3 ** attempt))
+        mem_mb: 1024 + attempt * 2048
     combine_results:
         mem_mb: 4000 + attempt * 2048
