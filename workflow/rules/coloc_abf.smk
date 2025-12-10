@@ -8,6 +8,6 @@ rule run_coloc:
     conda:
         "../envs/coloc.yml"
     resources:
-        runtime=lambda wc, attempt: 30 + attempt * 30,
+        runtime=lambda wc, attempt: 150 + attempt * 60,
     script:
         "../scripts/coloc_abf.R"
