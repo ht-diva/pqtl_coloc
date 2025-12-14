@@ -2,6 +2,8 @@
 rule query_pwas:
     output:
         sumstat = ws_path("tmp/pwas/{locuseq}_sumstat.csv.gz"),
+    log:
+        ws_path("logs/pwas/{locuseq}.log")
     params:
         filename = lambda wildcards: get_pwasname(wildcards),
         prefix = lambda wildcards, output: output.sumstat.replace("_sumstat.csv.gz", ""),
