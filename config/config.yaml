@@ -11,6 +11,7 @@ gwasstudio:
   project_B: genesandhealth
   study_A: believe
   study_B: v010_quantitative_traits_median_values
+  ntraits_B: 107
 
 
 # coloc.abf parameters
