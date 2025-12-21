@@ -30,7 +30,7 @@ end_ext=$((end + BUFFER))
 
 # make sure beg_ext is not negative
 if [ "$beg_ext" -lt 0 ]; then
-    beg_ext=0
+    beg_ext=1
 fi
 
 echo "Original region:  ${chr}:${beg}-${end}"
