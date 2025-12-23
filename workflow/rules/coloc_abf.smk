@@ -4,7 +4,7 @@ rule run_coloc:
         pwas = rules.query_pwas.output.sumstat,
         gwas = rules.query_gwas.output.sentinel
     output:
-        result = temp(ws_path("tmp/coloc/{locuseq}_coloc_results.csv"))
+        result = ws_path("tmp/coloc/{locuseq}_coloc_results.csv")
     conda:
         "../envs/coloc.yml"
     resources:
