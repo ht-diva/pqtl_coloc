@@ -1,5 +1,5 @@
 # paths
-workspace_path: "results/believe"
+workspace_path: "results/believe_cis"
 path_lb: "config/believe_loci_cis.csv"
 path_gwas: "/exchange/healthds/pQTL/BELIEVE/harmonized_gwas"
 

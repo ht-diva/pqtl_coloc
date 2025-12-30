@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #SBATCH --job-name coloc
-#SBATCH --output %j_believe.log
+#SBATCH --output %j_cis_only.log
 #SBATCH --partition cpuq
 #SBATCH --cpus-per-task 1
-#SBATCH --mem 3G
-#SBATCH --time 30-00:00:00
+#SBATCH --mem 8G
+#SBATCH --time 10-00:00:00
 
 source ~/.bashrc
 module -s load singularity/3.8.5
