@@ -53,6 +53,8 @@ output:
   - notes.source_id
   - trait.desc
   - total.samples
+  - total.cases
+
 EOF
 
 echo "YAML file created: $QYAML"
