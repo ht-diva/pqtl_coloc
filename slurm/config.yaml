@@ -27,8 +27,8 @@ set-resources:
     query_pwas:
         mem_mb: 1024 + attempt * 1024
     query_gwas:
-        mem_mb: 2048 + attempt * 1024
+        mem_mb: 6096 + attempt * 2048
     run_coloc:
-        mem_mb: 1024 + attempt * 2048
+        mem_mb: 2024 + attempt * 2048
     combine_results:
         mem_mb: 4000 + attempt * 2048
