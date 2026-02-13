@@ -10,12 +10,23 @@ suppressPackageStartupMessages({
   library(purrr)
 })
 
+#----------------------------#
+# -----      Inputs     -----
+#----------------------------#
 
+# Pass parameters defined at Snakemake's rule
 pwas_file <- snakemake@input[["pwas"]]
 gwas_file <- snakemake@input[["gwas"]]
 resu_file <- snakemake@output[["result"]]
+bin_pwas  <- snakemake@params[["bin_pwas"]]
+bin_gwas  <- snakemake@params[["bin_gwas"]]
 
-# Handle missings when computing p-value from beta&sd
+
+#----------------------------#
+# -----    Functions    -----
+#----------------------------#
+
+# Handle NAs when computing p-value from beta&sd
 safe_pnorm <- function(b, se, p=FALSE) {
   
   # Ensure the vectors are of the same length
@@ -33,7 +44,9 @@ safe_pnorm <- function(b, se, p=FALSE) {
   # Identify non-missing and non-zero indices
   i <- which(!is.na(b) & !is.na(se) & se != 0)
   
-  # compute z-score and take absolute, raise digits with mpfr, apply pnorm for non-missing values
+  # compute z-score and take absolute, 
+  # raise digits with mpfr, 
+  # apply pnorm for non-missing values
   z_score <- b[i] / se[i]
   z_mpfr <- Rmpfr::mpfr(- abs(z_score), 120)
   p_mpfr <- 2 * pnorm(z_mpfr)
@@ -52,76 +65,110 @@ safe_pnorm <- function(b, se, p=FALSE) {
   return(result)
 }
 
+#---------------#
 
-prepare4coloc <- function(data){
+# Annotated GWAS sumstat in a format desired for coloc:
+#  - for quantitative traits, compute sdY & type = 'quant'
+#  - for binary traits, compute case proportion (s) & type = 'cc'
+prepare4coloc <- function(data, dichotomous = FALSE){
   
   temp  <- data |>
     dplyr::rename(position = POS, beta = BETA) |>
-    dplyr::distinct(position, .keep_all = TRUE) |> # remove duplicate SNPs
+    group_by(position) |>
+    dplyr::slice_max(MLOG10P, n = 1) |> # handle multi-allelic variants
+    ungroup() |>
     dplyr::rename_with(~gsub("meta_total_samples", "N", .x)) |>
     dplyr::mutate(
       snp = paste0(CHR, ":", position),
       varbeta = SE^2,
       pvalues = safe_pnorm(beta, SE, p = TRUE),
-      MAF = ifelse(EAF < 0.5, EAF, 1- EAF),
-      sdY = coloc:::sdY.est(varbeta, MAF, N)
-      ) |>
-    dplyr::select(position, snp, beta, varbeta, MAF, pvalues, sdY)
+      MAF = ifelse(EAF < 0.5, EAF, 1- EAF)
+    )
   
-  temp$type <- "quant"
+  if(dichotomous){
+    
+    temp <- temp |>
+      dplyr::mutate(s = meta_total_cases/N) %>%
+      dplyr::select(position, snp, beta, varbeta, MAF, pvalues, s)
+  
+    } else {
+      
+      temp <- temp %>%
+        dplyr::mutate(sdY = coloc:::sdY.est(varbeta, MAF, N)) %>%
+        dplyr::select(position, snp, beta, varbeta, MAF, pvalues, sdY)
+    }
+  
+  
   odata <- as.list(na.omit(temp))
-  odata$type <- unique(odata$type)
-  odata$sdY <- unique(odata$sdY)
+  
+  if(dichotomous) {
+    
+    odata$type <- "cc"
+    odata$s <- unique(odata$s)
+    
+    } else {
+      
+      odata$type <- "quant"
+      odata$sdY <- unique(odata$sdY)
+  }
   
   return(odata)
 }
 
-# files with credible sets
-sums_lists <- list.files(
-  path = dirname(gwas_file),
-  pattern = ".csv.gz",
-  full.names = TRUE
-)
+#---------------#
+
+# Annotate GWAS first, then run coloc ABF
+run_coloc <- function(gfile){
+  
+  gwas <- fread(gfile)
+  
+  annot_gwas <- prepare4coloc(gwas, dichotomous = bin_gwas)
+  
+  # run coloc standard
+  res <- coloc::coloc.abf(annot_pwas, annot_gwas)
+  
+  res_h4 <- res$summary %>% t() %>% as.data.frame()
+  
+  # Define labels helping to combine coloc results later
+  locus <- pwas_file %>% basename() %>%
+    stringr::str_remove("_sumstat.csv.gz") %>%
+    stringr::str_remove("seq.(\\d)+.(\\d)+_")
+  
+  seqid   <- unique(pwas$meta_notes_source_id)
+  protein <- unique(pwas$meta_trait_desc)
+  pheno <- unique(gwas$meta_trait_desc)
+  
+  res_final <- data.frame(
+    "seqid" = seqid,
+    "locus" = locus,
+    "protein" = protein,
+    "phenotype" = pheno
+  ) %>%
+    cbind(res_h4)
+  
+  return(res_final)
+}
 
 
 #-------------------------------#
 # -----     Run Coloc      -----
 #-------------------------------#
 
-run_coloc <- function(pfile, gfile){
-  
-  pwas <- fread(pfile)
-  gwas <- fread(gfile)
+# List GWASs sumstat extracted by tileDB
+sums_lists <- list.files(
+  path = dirname(gwas_file),
+  pattern = ".csv.gz",
+  full.names = TRUE
+)
 
-  annot_pwas <- prepare4coloc(pwas)
-  annot_gwas <- prepare4coloc(gwas)
+# Read protein GWAS (PWAS)
+pwas <- fread(pwas_file)
 
-  # run coloc standard
-  res <- coloc::coloc.abf(annot_pwas, annot_gwas)
-
-  res_h4 <- res$summary %>% t() %>% as.data.frame()
-
-  locuseq <- pfile %>% basename() %>% stringr::str_remove("_sumstat.csv.gz")
-  seqid   <- unique(pwas$meta_notes_source_id)
-  protein <- unique(pwas$meta_trait_desc)
-  pheno <- unique(gwas$meta_trait_desc)
-
-  res_final <- data.frame(
-    "seqid" = seqid,
-    "locus" = locuseq,
-    "protein" = protein,
-    "phenotype" = pheno
-  ) %>%
-    cbind(res_h4)
-
-  return(res_final)
-}
-
-# all possible protein-phenotype pairs
-traits2test <- expand.grid(pwas_file, sums_lists, stringsAsFactors = FALSE)
+# Annotate PWAS
+annot_pwas <- prepare4coloc(pwas, dichotomous = bin_pwas)
 
 # run coloc
-res <- map2_df(traits2test$Var1, traits2test$Var2, run_coloc)
+res <- map_df(sums_lists, run_coloc)
 
 # save results
 write.csv(res, file = resu_file, quote = T, row.names = F)
