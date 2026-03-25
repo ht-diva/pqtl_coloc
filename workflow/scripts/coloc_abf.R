@@ -73,29 +73,30 @@ safe_pnorm <- function(b, se, p=FALSE) {
 prepare4coloc <- function(data, dichotomous = FALSE){
   
   temp  <- data |>
-    dplyr::rename(position = POS, beta = BETA) |>
-    group_by(position) |>
-    dplyr::slice_max(MLOG10P, n = 1) |> # handle multi-allelic variants
-    ungroup() |>
-    dplyr::rename_with(~gsub("meta_total_samples", "N", .x)) |>
     dplyr::mutate(
-      snp = paste0(CHR, ":", position),
       varbeta = SE^2,
-      pvalues = safe_pnorm(beta, SE, p = TRUE),
-      MAF = ifelse(EAF < 0.5, EAF, 1- EAF)
-    )
+      pvalues = safe_pnorm(BETA, SE, p = TRUE),
+      MAF = ifelse(EAF < 0.5, EAF, 1 - EAF)
+    ) |>
+    dplyr::rename_with(
+      ~gsub("meta_total_samples", "N", .x)
+      ) |>
+    dplyr::rename(
+      snp = SNPID, # as coloc requires these names
+      beta = BETA
+      )
   
   if(dichotomous){
     
     temp <- temp |>
       dplyr::mutate(s = meta_total_cases/N) %>%
-      dplyr::select(position, snp, beta, varbeta, MAF, pvalues, s)
+      dplyr::select(snp, beta, varbeta, MAF, pvalues, s)
   
-    } else {
-      
-      temp <- temp %>%
-        dplyr::mutate(sdY = coloc:::sdY.est(varbeta, MAF, N)) %>%
-        dplyr::select(position, snp, beta, varbeta, MAF, pvalues, sdY)
+  } else {
+    
+    temp <- temp %>%
+      dplyr::mutate(sdY = coloc:::sdY.est(varbeta, MAF, N)) %>%
+      dplyr::select(snp, beta, varbeta, MAF, pvalues, sdY)
     }
   
   
