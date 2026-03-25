@@ -10,8 +10,10 @@ gwasstudio:
   project_A: hdsc
   project_B: genesandhealth
   study_A: believe
-  study_B: v010_quantitative_traits_median_values
-  ntraits_B: 107
+  study_B: v010_binary_traits_3digitICD10
+  dichotomous_A: False
+  dichotomous_B: True
+  ntraits_B: 529
 
 
 # coloc.abf parameters
