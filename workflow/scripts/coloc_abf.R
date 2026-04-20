@@ -49,7 +49,7 @@ safe_pnorm <- function(b, se, p=FALSE) {
   # apply pnorm for non-missing values
   z_score <- b[i] / se[i]
   z_mpfr <- Rmpfr::mpfr(- abs(z_score), 120)
-  p_mpfr <- 2 * pnorm(z_mpfr)
+  p_mpfr <- 2 * Rmpfr::pnorm(z_mpfr) # dispatch the correct pnorm()
   mlog10p <- - log10(p_mpfr)
   
   # print p-value in character format and mlog10p in numeric
