@@ -1,5 +1,5 @@
 # paths
-workspace_path: "results/believe_cis_binary"
+workspace_path: "results/believe_cis_quant"
 path_lb: "config/believe_loci_cis.csv"
 path_gwas: "/exchange/healthds/pQTL/BELIEVE/harmonized_gwas"
 
@@ -10,12 +10,12 @@ gwasstudio:
   project_A: hdsc
   project_B: genesandhealth
   study_A: believe
-  #study_B: v010_quantitative_traits_median_values
-  study_B: v010_binary_traits_3digitICD10
+  study_B: v010_quantitative_traits_median_values
+  #study_B: v010_binary_traits_3digitICD10
   dichotomous_A: False
-  dichotomous_B: True
-  #ntraits_B: 107
-  ntraits_B: 529
+  dichotomous_B: False
+  ntraits_B: 107
+  #ntraits_B: 529
 
 
 # coloc.abf parameters
